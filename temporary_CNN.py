@@ -8,11 +8,11 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 # test_path = os.getcwd() + "\\gesture\\test"
 
 train_data_path = os.getcwd() + "\\gesture\\train"
-val_data_path = 'path/to/validation/data'
+val_data_path = os.getcwd() + "\\gesture\\validate"
 test_data_path = os.getcwd() + "\\gesture\\test"
 
 # Define image dimensions and batch size
-img_width, img_height = 224, 224
+img_width, img_height = 200, 200
 batch_size = 32
 
 # Define data generators with data augmentation for training and validation data
@@ -76,4 +76,4 @@ test_generator = test_datagen.flow_from_directory(
 
 test_loss, test_acc = model.evaluate(test_generator, verbose=1)
 print('Test accuracy:', test_acc)
-model.save()
+model.save('best_model_dataflair3.h5')
