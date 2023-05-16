@@ -16,54 +16,51 @@ img_width, img_height = 200, 200
 batch_size = 32
 
 # Define data generators with data augmentation for training and validation data
-train_datagen = ImageDataGenerator(
-    rescale=1./255,
-    rotation_range=20,
-    width_shift_range=0.1,
-    height_shift_range=0.1,
-    shear_range=0.1,
-    zoom_range=0.1,
-    horizontal_flip=True,
-    fill_mode='nearest')
-
-val_datagen = ImageDataGenerator(rescale=1./255)
+train_datagen = ImageDataGenerator(rescale=1./255)
 
 train_generator = train_datagen.flow_from_directory(
     train_data_path,
-    target_size=(img_width, img_height),
-    batch_size=batch_size,
-    class_mode='categorical')
+    target_size=(200, 200),
+    batch_size=32,
+    class_mode='binary')
 
-val_generator = val_datagen.flow_from_directory(
+# Set up data generator for validation data
+validation_datagen = ImageDataGenerator(rescale=1./255)
+
+validation_generator = validation_datagen.flow_from_directory(
     val_data_path,
-    target_size=(img_width, img_height),
-    batch_size=batch_size,
-    class_mode='categorical')
+    target_size=(200,200),
+    batch_size=32,
+    class_mode='binary')
 
-# Build CNN model
+# Define the model architecture
 model = tf.keras.models.Sequential([
-    tf.keras.layers.Conv2D(32, (3,3), activation='relu', input_shape=(img_width, img_height, 3)),
-    tf.keras.layers.MaxPooling2D(2, 2),
+    tf.keras.layers.Conv2D(32, (3,3), activation='relu', input_shape=(200, 200, 3)),
+    tf.keras.layers.MaxPooling2D(2,2),
     tf.keras.layers.Conv2D(64, (3,3), activation='relu'),
+    tf.keras.layers.MaxPooling2D(2,2),
+    tf.keras.layers.Conv2D(128, (3,3), activation='relu'),
     tf.keras.layers.MaxPooling2D(2,2),
     tf.keras.layers.Conv2D(128, (3,3), activation='relu'),
     tf.keras.layers.MaxPooling2D(2,2),
     tf.keras.layers.Flatten(),
     tf.keras.layers.Dense(512, activation='relu'),
-    tf.keras.layers.Dense(5, activation='softmax')
+    tf.keras.layers.Dense(1, activation='sigmoid')
 ])
 
-# Compile model
-model.compile(loss='categorical_crossentropy',
-              optimizer=tf.keras.optimizers.Adam(),
+# Compile the model
+model.compile(loss='binary_crossentropy',
+              optimizer=tf.keras.optimizers.RMSprop(lr=1e-4),
               metrics=['accuracy'])
 
-# Train model
+# Train the model using the generator
 history = model.fit(
-    train_generator,
-    epochs=10,
-    validation_data=val_generator,
-    verbose=1)
+      train_generator,
+      steps_per_epoch=train_generator.samples/train_generator.batch_size,
+      epochs=10,
+      validation_data=validation_generator,
+      validation_steps=validation_generator.samples/validation_generator.batch_size,
+      verbose=1)
 
 # Evaluate model on test data
 test_datagen = ImageDataGenerator(rescale=1./255)
